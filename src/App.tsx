@@ -162,7 +162,7 @@ class App extends React.Component<{}, IAppState> {
 
   protected resizeCanvas(event:any): void {
     try{
-      this.canvasHeight = document.documentElement.clientHeight - 64;
+      this.canvasHeight = document.documentElement.clientHeight;
       this.canvasWidth = document.documentElement.clientWidth;
       this.canvas.setWidth(this.canvasWidth);
       this.canvas.setHeight(this.canvasHeight);
