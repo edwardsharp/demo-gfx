@@ -1,5 +1,6 @@
 import * as React from 'react';
 import 'fabric';
+declare let fabric: any; // @types/fabric is only fabric 1.5 right now, so this :/
 // import { pouchdb } from 'pouchdb';
 
 import { Color, COLORS } from './color';
@@ -7,9 +8,14 @@ import { Gfx } from './gfx';
 
 import './App.css';
 
-declare let fabric: any;
 
-class App extends React.Component {
+// interface IAppProps {}
+
+interface IAppState {
+  zoomVal: number;
+}
+
+class App extends React.Component<{}, IAppState> {
   protected gfx: Gfx;
   protected canvas: any;
   protected plate: {value: string, 
@@ -67,12 +73,52 @@ class App extends React.Component {
   // protected colorCtrl: FormControl;
   protected filteredColors: any[]; // Observable<any[]>;
   protected plateObj: any;
-  protected zoomVal: number = 0.5;
+
+  constructor(props:any) {
+    super(props);
+    // this.someMethod = this.someMethod.bind(this);
+    this.saveGfx = this.saveGfx.bind(this);
+    this.zoomReset = this.zoomReset.bind(this);
+    this.zoom = this.zoom.bind(this);
+    this.state = {
+      zoomVal: 0.5
+    };
+  }
+
+  public render(){
+    return (
+      <div className="App">
+        <nav id="gfx">
+          <div className="inline-flex space-between">
+
+            <button onClick={this.saveGfx}>
+              Save
+            </button>
+            
+          </div>
+          <div className="flex">
+            <button 
+              id="zoomReset" 
+              onClick={this.zoomReset}>
+              reset zoom
+            </button>
+            <input type="range"
+              onChange={this.zoom}
+              min="0.1" 
+              max="3" 
+              step="0.1"
+              value={this.state.zoomVal}
+            />
+          </div>
+        </nav>
+        <canvas id="c">&nbsp;</canvas>
+      </div>
+    );
+  }
 
   public componentDidMount(){
 
     this.gfx = new Gfx();
-
 
     this.canvas = new fabric.Canvas('c', {
       selection: false,
@@ -112,14 +158,6 @@ class App extends React.Component {
 
     this.resizeCanvas('');
     this.canvas.setZoom(0.5);
-  }
-
-  public render(){
-    return (
-      <div className="App">
-        <canvas id="c">&nbsp;</canvas>
-      </div>
-    );
   }
 
   protected resizeCanvas(event:any): void {
@@ -169,17 +207,18 @@ class App extends React.Component {
   //   });
   // }
 
-  // protected zoom(e:any): void {
-  //   this.canvas.setZoom(e.value);
-  //   this.canvas.renderAll();
-  // }
+  protected zoom(e:any): void {
+    this.setState({zoomVal: e.target.value});
+    this.canvas.setZoom(e.target.value);
+    this.canvas.renderAll();
+  }
 
-  // protected zoomReset(e:any): void {
-  //   this.zoomVal = 0.5;
-  //   this.canvas.setZoom(0.5);
-  //   this.canvas.absolutePan(new fabric.Point(0, 0));
-  //   this.canvas.renderAll();
-  // }
+  protected zoomReset(e:any): void {
+    this.setState({zoomVal: 0.5});
+    this.canvas.setZoom(0.5);
+    this.canvas.absolutePan(new fabric.Point(0, 0));
+    this.canvas.renderAll();
+  }
 
   protected drawRulers(): void{
     const grid = 30; // e.g. DPI
