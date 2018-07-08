@@ -20,6 +20,7 @@ interface IAppState {
         backTop?: {top: number, left: number},
         backCenter?: {top: number, left: number}};
   uploading: boolean;
+  showLayerPanel: boolean;
 }
 
 class App extends React.Component<{}, IAppState> {
@@ -69,7 +70,6 @@ class App extends React.Component<{}, IAppState> {
   ];
   protected defaultPlate = {value: 'Select Plate'};
   protected objectToolsHidden = true;
-  protected showLayerPanel: boolean;
   protected toggleNav: boolean = false;
   protected uploading: boolean = false;
   protected showRuler: boolean = true;
@@ -87,10 +87,15 @@ class App extends React.Component<{}, IAppState> {
     this.plateChange = this.plateChange.bind(this);
     this.gfxFileChanged = this.gfxFileChanged.bind(this);
     this.fileInput = React.createRef();
+    this.showLayerPanelOnClick = this.showLayerPanelOnClick.bind(this);
+    this.hideLayerPanel = this.hideLayerPanel.bind(this);
+    this.addLayerToCanvasOnClick = this.addLayerToCanvasOnClick.bind(this);
+    this.removeLayerOnClick = this.removeLayerOnClick.bind(this);
     this.state = {
       zoomVal: 0.5,
       plate: this.defaultPlate,
-      uploading: false
+      uploading: false,
+      showLayerPanel: false
     };
   }
 
@@ -126,6 +131,35 @@ class App extends React.Component<{}, IAppState> {
             accept="image/x-png,image/gif,image/jpeg,image/svg+xml"
             disabled={this.state.uploading}
             onChange={this.gfxFileChanged} ref={this.fileInput} />
+
+          
+
+          {!this.state.showLayerPanel &&
+            this.attachmentItemsForGfx().map((item:any) => {
+              return (
+                <div onClick={this.showLayerPanelOnClick} key={item}>
+                  <img className="attachment-img" alt={item} src={this.attachmentSrcFor(this.gfx, item)} />
+                  <span title={item}>{item}</span>
+                  <p>
+                    <span> {this.gfx.attachmentDimensions[item]} </span>
+                  </p>
+                </div>
+              );
+            })
+          }
+
+          {this.state.showLayerPanel &&
+            <button onClick={this.hideLayerPanel}>All Layers</button>
+          }
+
+          {this.state.showLayerPanel && !this.isCanvasLayer(this.selectedLayer) && 
+            <button onClick={this.addLayerToCanvasOnClick}>Show</button>
+          }
+          {this.state.showLayerPanel && this.isCanvasLayer(this.selectedLayer) && 
+            <button onClick={this.removeLayerOnClick}>Hide</button>
+          }
+          
+
         </nav>
         <canvas id="c">&nbsp;</canvas>
       </div>
@@ -194,7 +228,7 @@ class App extends React.Component<{}, IAppState> {
     this.canvas.on('selection:cleared', (e:any) => {
       this.selecting = false;
       this.selectedLayer = undefined;
-      this.showLayerPanel = false;
+      this.setState({showLayerPanel: false});
     });
 
 
@@ -463,7 +497,7 @@ class App extends React.Component<{}, IAppState> {
   }
 
   protected attachmentItemsForGfx(){
-    return this.gfx._attachments ? Object.keys(this.gfx._attachments) : [];
+    return this.gfx && this.gfx._attachments ? Object.keys(this.gfx._attachments) : [];
   }
   
   protected attachmentSrcFor(gfx:Gfx,itemKey:string){
@@ -513,9 +547,14 @@ class App extends React.Component<{}, IAppState> {
     // });
   }
 
+  protected showLayerPanelOnClick(e:any){
+    console.log('showLayerPanelOnClick e:',e.target.title);
+    this.showLayerPanelFor(e.target.title);
+  }
+
   protected showLayerPanelFor(itemKey:string){
     this.selectedLayer = itemKey;
-    this.showLayerPanel = true;
+    this.setState({showLayerPanel: true});
     if(!this.canvas.getActiveObject() || this.canvas.getActiveObject().id !== itemKey){
       this.canvas.getObjects().forEach((o:any) => {
         if(o.id === itemKey) {
@@ -527,10 +566,14 @@ class App extends React.Component<{}, IAppState> {
   }
   protected hideLayerPanel(){
     this.selectedLayer = undefined;
-    this.showLayerPanel = false;
+    this.setState({showLayerPanel: false});
   }
 
-  protected addLayerToCanvas(itemKey:string){
+  protected addLayerToCanvasOnClick(e:any){
+    this.addLayerToCanvas(this.selectedLayer);
+  }
+
+  protected addLayerToCanvas(itemKey:any){
     if(this.gfx.canvasLayers.indexOf(itemKey) < 0){
       let idExists = false;
       this.canvas.getObjects().forEach((o:any) => {
@@ -578,17 +621,21 @@ class App extends React.Component<{}, IAppState> {
     }
   }
 
-  protected removeLayer(itemKey:string){
+  protected removeLayerOnClick(e:any){
+    this.removeLayer(this.selectedLayer);
+  }
+
+  protected removeLayer(itemKey:any){
     try{
       this.canvas.remove(this.canvas.getActiveObject());
       this.canvas.renderAll();
       this.hideLayerPanel();
       delete this.gfx.canvasLayerColors[itemKey];
       this.gfx.canvasLayers.splice(this.gfx.canvasLayers.indexOf(itemKey), 1);
-    }catch(e){ /* console.warn('could not remove layer:',itemKey,' e:',e); */ }
+    }catch(e){  console.warn('could not remove layer:',itemKey,' e:',e);  }
   }
 
-  protected isCanvasLayer(itemKey:string): boolean{
+  protected isCanvasLayer(itemKey:any): boolean{
     return this.gfx.canvasLayers.indexOf(itemKey) > -1;
   }
 

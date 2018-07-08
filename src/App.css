@@ -95,12 +95,21 @@ mat-expansion-panel{
   background-position:0 0, 8px 0, 8px -8px, 0px 8px;
 }
 
-button:hover, mat-list-item:hover, .hover-item:hover {
+/*button:hover, mat-list-item:hover, .hover-item:hover {
   background-color: #e6e6e6;
+}*/
+
+nav button, nav input, nav select{
+  margin-bottom: 7px;
 }
 
 .mat-list-item-content span{
   font-size: 15px;
+}
+
+.attachment-img{
+  height: 50px;
+  width: 50px;
 }
 
 @media (max-width: 767px) {
