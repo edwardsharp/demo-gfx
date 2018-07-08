@@ -19,7 +19,7 @@ interface IAppState {
         frontCenter?: {top: number, left: number}, 
         backTop?: {top: number, left: number},
         backCenter?: {top: number, left: number}};
-  file: string | undefined;
+  uploading: boolean;
 }
 
 class App extends React.Component<{}, IAppState> {
@@ -76,6 +76,7 @@ class App extends React.Component<{}, IAppState> {
   // protected colorCtrl: FormControl;
   protected filteredColors: any[]; // Observable<any[]>;
   protected plateObj: any;
+  protected fileInput: any;
 
   constructor(props:any) {
     super(props);
@@ -85,10 +86,11 @@ class App extends React.Component<{}, IAppState> {
     this.PlateSelect = this.PlateSelect.bind(this);
     this.plateChange = this.plateChange.bind(this);
     this.gfxFileChanged = this.gfxFileChanged.bind(this);
+    this.fileInput = React.createRef();
     this.state = {
       zoomVal: 0.5,
       plate: this.defaultPlate,
-      file: undefined
+      uploading: false
     };
   }
 
@@ -122,7 +124,8 @@ class App extends React.Component<{}, IAppState> {
 
           <input id="designFile" type="file" multiple={true}  
             accept="image/x-png,image/gif,image/jpeg,image/svg+xml"
-            onChange={this.gfxFileChanged} value={this.state.file} />
+            disabled={this.state.uploading}
+            onChange={this.gfxFileChanged} ref={this.fileInput} />
         </nav>
         <canvas id="c">&nbsp;</canvas>
       </div>
@@ -418,10 +421,10 @@ class App extends React.Component<{}, IAppState> {
   }
 
   protected gfxFileChanged(e:any){
-    this.uploading = true;
+    this.setState({uploading: true});
     this.gfx._attachments = this.gfx._attachments || {};
     let description;
-    const files = e.target.files;
+    const files = this.fileInput.current.files;
     for(const file of files){
       description = description ? `${description}, ${file.name}` : file.name;
       this.gfx._attachments[file.name] = {
@@ -447,13 +450,14 @@ class App extends React.Component<{}, IAppState> {
         }
       },1000);
 
-      this.uploading = false;
-      // e.target.value = undefined;
-      this.setState({file: undefined});
+      setTimeout( () => {
+        this.fileInput.current.value = '';
+        this.setState({uploading: false});
+      }, 2500);
 
     }, (err:any) =>{
       console.warn('o noz! saveGfx err:',err);
-      this.uploading = false;
+      this.setState({uploading: false});
     });
 
   }
