@@ -13,17 +13,17 @@ import './App.css';
 
 interface IAppState {
   zoomVal: number;
+  plate: {value: string, 
+        viewValue?: string, 
+        frontTop?: {top: number, left: number},
+        frontCenter?: {top: number, left: number}, 
+        backTop?: {top: number, left: number},
+        backCenter?: {top: number, left: number}};
 }
 
 class App extends React.Component<{}, IAppState> {
   protected gfx: Gfx;
   protected canvas: any;
-  protected plate: {value: string, 
-        viewValue: string, 
-        frontTop: {top: number, left: number},
-        frontCenter: {top: number, left: number}, 
-        backTop: {top: number, left: number},
-        backCenter: {top: number, left: number}} | undefined;
   protected canvasHeight: number;
   protected canvasWidth: number;
   protected panning: boolean = false;
@@ -65,6 +65,7 @@ class App extends React.Component<{}, IAppState> {
       ]
     }
   ];
+  protected defaultPlate = {value: 'Select Plate'};
   protected objectToolsHidden = true;
   protected showLayerPanel: boolean;
   protected toggleNav: boolean = false;
@@ -76,12 +77,14 @@ class App extends React.Component<{}, IAppState> {
 
   constructor(props:any) {
     super(props);
-    // this.someMethod = this.someMethod.bind(this);
     this.saveGfx = this.saveGfx.bind(this);
     this.zoomReset = this.zoomReset.bind(this);
     this.zoom = this.zoom.bind(this);
+    this.PlateSelect = this.PlateSelect.bind(this);
+    this.plateChange = this.plateChange.bind(this);
     this.state = {
-      zoomVal: 0.5
+      zoomVal: 0.5,
+      plate: this.defaultPlate
     };
   }
 
@@ -110,9 +113,31 @@ class App extends React.Component<{}, IAppState> {
               value={this.state.zoomVal}
             />
           </div>
+
+          <this.PlateSelect plateGroups={this.plateGroups} plate={this.state.plate} />
         </nav>
         <canvas id="c">&nbsp;</canvas>
       </div>
+    );
+  }
+
+  public PlateSelect(props:any){
+    const plateGroups = props.plateGroups;
+    const items = plateGroups.map((group:any) =>
+      <optgroup key={group.name} label={group.name} disabled={group.disabled}>
+        {group.plates.map((plateItem:any) => {
+          return (
+            <option key={plateItem.value} value={plateItem.value}>{plateItem.viewValue}</option>
+          );
+        })}
+      </optgroup>
+    );
+    return (
+      <select onChange={this.plateChange} value={this.state.plate.value}> 
+        <option disabled={true}>{this.defaultPlate.value}</option>
+        <option value="clear">Clear</option>
+        {items}
+      </select>
     );
   }
 
@@ -169,43 +194,44 @@ class App extends React.Component<{}, IAppState> {
     }catch(e){ /* console.warn('o noz! caught e in resizeCanvas e:',e); */ }
   }
 
-  // protected plateChange(plateItem:any): void{
-  //   if(this.plate != plateItem && plateItem.value && plateItem.value.length > 2){
-  //     this.gfx.plate = plateItem;
-  //     this.plate = plateItem;
-  //     this.loadSVG(plateItem.value);
-  //   }else if(plateItem == 'clear'){
-  //     this.canvas.remove(this.plateObj);
-  //     this.plate = undefined;
-  //     this.gfx.plate = undefined;
-  //     this.canvas.renderAll();
-  //   }
-  // }
+  protected plateChange(e:any): void{
+    const plate = this.plateGroups.filter((pg:any) => pg.plates.some((p:any) => p.value === e.target.value));
+    if(plate && plate[0] && plate[0].plates[0]){
+      this.setState({ plate: plate[0].plates[0] });
+      // this.gfx.plate = plate[0].plates[0];
+      this.loadSVG(plate[0].plates[0].value);
+    }else if(e.target.value === 'clear'){
+      this.canvas.remove(this.plateObj);
+      this.setState({plate: this.defaultPlate });
+      // this.gfx.plate = undefined;
+      this.canvas.renderAll();
+    }
+  }
 
-  // protected loadSVG(id:any):void {
-  //   fabric.loadSVGFromURL(`assets/gfx/${id}.svg`, (objects, options) => {
-  //     this.plateObj = fabric.util.groupSVGElements(objects, options);
-  //     this.plateObj.selectable = false;
-  //     this.plateObj.hasControls = false
-  //     this.plateObj.hasBorders = false
-  //     this.plateObj.lockMovementX = true
-  //     this.plateObj.lockMovementY = true
-  //     this.plateObj.scaleX = 0.1;
-  //     this.plateObj.scaleY = 0.1;
-  //     this.plateObj.top = 60;
-  //     this.plateObj.left = 60;
-  //     this.plateObj.setCoords();
-  //     this.canvas.add(this.plateObj);
+  protected loadSVG(id:any):void {
+    fabric.loadSVGFromURL(`gfx/${id}.svg`, (objects:any, options:any) => {
+      this.plateObj = fabric.util.groupSVGElements(objects, options);
+      this.plateObj.selectable = false;
+      this.plateObj.hasControls = false
+      this.plateObj.hasBorders = false
+      this.plateObj.lockMovementX = true
+      this.plateObj.lockMovementY = true
+      this.plateObj.scaleX = 0.1;
+      this.plateObj.scaleY = 0.1;
+      this.plateObj.top = 60;
+      this.plateObj.left = 60;
+      this.plateObj.setCoords();
+      this.canvas.add(this.plateObj);
 
-  //     this.gfx.canvasLayers.forEach((l) => {
-  //       this.canvas.getObjects().forEach((o:any) => {
-  //         if(o.id === l) { o.bringToFront(); }
-  //       });
-  //     });
-  //     this.canvas.renderAll();
-  //     // console.log('loadSVG JSON.stringify(this.canvas):',JSON.stringify(this.canvas));
-  //   });
-  // }
+      this.gfx.canvasLayers.forEach((l) => {
+        this.canvas.getObjects().forEach((o:any) => {
+          if(o.id === l) { o.bringToFront(); }
+        });
+      });
+      this.canvas.renderAll();
+      // console.log('loadSVG JSON.stringify(this.canvas):',JSON.stringify(this.canvas));
+    });
+  }
 
   protected zoom(e:any): void {
     this.setState({zoomVal: e.target.value});
@@ -586,10 +612,10 @@ class App extends React.Component<{}, IAppState> {
   }
 
   protected centerObject(on:string): void{
-    if(this.plate && this.plate[on]){
+    if(this.state.plate && this.state.plate[on]){
       this.canvas.getActiveObject().set({
-        top: (this.plate[on].top * 0.1) + 60,
-        left: (this.plate[on].left * 0.1) + 60
+        top: (this.state.plate[on].top * 0.1) + 60,
+        left: (this.state.plate[on].left * 0.1) + 60
       });
       this.canvas.renderAll();
     }
