@@ -1,7 +1,7 @@
 import * as React from 'react';
 import 'fabric';
 declare let fabric: any; // @types/fabric is only fabric 1.5 right now, so this :/
-// import { pouchdb } from 'pouchdb';
+import PouchDB from 'pouchdb';
 
 import { Color, COLORS } from './color';
 import { Gfx } from './gfx';
@@ -19,10 +19,12 @@ interface IAppState {
         frontCenter?: {top: number, left: number}, 
         backTop?: {top: number, left: number},
         backCenter?: {top: number, left: number}};
+  file: string | undefined;
 }
 
 class App extends React.Component<{}, IAppState> {
   protected gfx: Gfx;
+  protected db: any;
   protected canvas: any;
   protected canvasHeight: number;
   protected canvasWidth: number;
@@ -82,9 +84,11 @@ class App extends React.Component<{}, IAppState> {
     this.zoom = this.zoom.bind(this);
     this.PlateSelect = this.PlateSelect.bind(this);
     this.plateChange = this.plateChange.bind(this);
+    this.gfxFileChanged = this.gfxFileChanged.bind(this);
     this.state = {
       zoomVal: 0.5,
-      plate: this.defaultPlate
+      plate: this.defaultPlate,
+      file: undefined
     };
   }
 
@@ -115,6 +119,10 @@ class App extends React.Component<{}, IAppState> {
           </div>
 
           <this.PlateSelect plateGroups={this.plateGroups} plate={this.state.plate} />
+
+          <input id="designFile" type="file" multiple={true}  
+            accept="image/x-png,image/gif,image/jpeg,image/svg+xml"
+            onChange={this.gfxFileChanged} value={this.state.file} />
         </nav>
         <canvas id="c">&nbsp;</canvas>
       </div>
@@ -144,6 +152,12 @@ class App extends React.Component<{}, IAppState> {
   public componentDidMount(){
 
     this.gfx = new Gfx();
+    if(navigator.vendor && navigator.vendor.indexOf('Apple') > -1){
+      console.log("LOADING FRUITDONW DB!");
+      this.db = new PouchDB('gfx', {adapter: 'fruitdown'});
+    }else{
+      this.db = new PouchDB('gfx');
+    }
 
     this.canvas = new fabric.Canvas('c', {
       selection: false,
@@ -389,32 +403,26 @@ class App extends React.Component<{}, IAppState> {
       }
     });
 
-    // this.gfxService.saveOrder(this.gfx).then(resp => {
-    //   if(resp["rev"]){
-    //     this.gfx._rev = resp["rev"];
-    //   }
+    this.db.put(this.gfx).then((resp:any) => {
+      if(resp.rev){
+        this.gfx._rev = resp.rev;
+      }
 
-    //   this.gfxService.getOrder(this.gfx._id).then( gfx => {
-    //     this.gfx = gfx;
-    //   }, err => console.log('o noz, getOrder err:',err));
+      this.db.get(this.gfx._id, {attachments: true}).then( (gfx:Gfx) => {
+        this.gfx = gfx;
+      }, (err:any) => console.warn('o noz, getGfx err:',err));
 
-    //   this.snackBar.open('Saved!', '', {
-    //     duration: 2000,
-    //   });
-
-    // }, err =>{
-    //   console.log('o noz! saveOrder err:',err);
-    //   this.snackBar.open('Error! Could not save.', '', {
-    //     duration: 3000,
-    //   });
-    // });
+    }, (err:any) =>{
+      console.log('o noz! saveGfx err:',err);
+    });
   }
 
   protected gfxFileChanged(e:any){
     this.uploading = true;
     this.gfx._attachments = this.gfx._attachments || {};
     let description;
-    for(const file of e.target.files){
+    const files = e.target.files;
+    for(const file of files){
       description = description ? `${description}, ${file.name}` : file.name;
       this.gfx._attachments[file.name] = {
         "content_type": file.type,
@@ -425,38 +433,28 @@ class App extends React.Component<{}, IAppState> {
     // this.gfx.history = this.gfx.history || [];
     // this.gfx.history.push({date: new Date, title: `Added ${e.target.files.length} GFX Attachment${e.target.files.length > 1 ? 's' : ''}`, description: description});
 
-    // this.gfxService.saveOrder(this.gfx).then(resp => {
-    //   if(resp["rev"]){
-    //     this.gfx._rev = resp["rev"];
-    //   }
+    this.db.put(this.gfx).then((resp:any) => {
+      if(resp.rev){
+        this.gfx._rev = resp.rev;
+      }
 
-    //   this.gfxService.getOrder(this.gfx._id).then( gfx => this.gfx = gfx, err => console.log('o noz, getOrder err:',err));
+      this.db.get(this.gfx._id, {attachments: true}).then( (gfx:Gfx) => this.gfx = gfx, (err:any) => console.log('o noz, getGfx err:',err));
 
-    //   let msg = '';
-    //   if(e.target.files.length == 0){
-    //     msg = `Attachment ${e.target.files[0].file.name} Saved!`;
-    //   }else{
-    //     msg = `${e.target.files.length} Attachments Saved!`
-    //   }
-    //   setTimeout( () => {
-    //     for(let i=0; i < e.target.files.length; i++){
-    //       this.getDimensionsFor(e.target.files[i].name);
-    //       this.addLayerToCanvas(e.target.files[i].name);
-    //     }
-    //   },1000);
+      setTimeout( () => {
+        for(const item of files){
+          this.getDimensionsFor(item.name);
+          this.addLayerToCanvas(item.name);
+        }
+      },1000);
 
-    //   this.uploading = false;
-    //   this.snackBar.open(msg, '', {
-    //     duration: 2000,
-    //   });
+      this.uploading = false;
+      // e.target.value = undefined;
+      this.setState({file: undefined});
 
-    // }, err =>{
-    //   console.log('o noz! saveOrder err:',err);
-    //   this.snackBar.open('Error! Could not save attachment(s).', '', {
-    //     duration: 3000,
-    //   });
-    //   this.uploading = false;
-    // });
+    }, (err:any) =>{
+      console.warn('o noz! saveGfx err:',err);
+      this.uploading = false;
+    });
 
   }
 
@@ -470,6 +468,7 @@ class App extends React.Component<{}, IAppState> {
       const data = gfx._attachments[itemKey].data;
       return (data && contentType && contentType.match(/image/i)) ? `data:${contentType};base64,${data}` : ''; 
     }catch(err){
+      console.warn('attachmentSrcFor err:',err);
       return '';
     }      
   }
@@ -488,7 +487,7 @@ class App extends React.Component<{}, IAppState> {
         };
         img.src = `data:${contentType};base64,${data}`;
       }
-    }catch(err){ /* console.warn('dimensionsFor err:',err); */ } 
+    }catch(err){  console.warn('dimensionsFor err:',err);  } 
   }
 
   protected deleteAttachmentFor(itemKey:string){
