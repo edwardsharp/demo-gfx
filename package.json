@@ -1,13 +1,19 @@
 {
   "name": "demo-gfx",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
   "scripts": {
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
-    "eject": "react-scripts-ts eject"
+    "eject": "react-scripts-ts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
+  "author": "edwardsharp",
+  "description": "react component for adding gfx to an apparel template",
+  "license": "GPL-3.0",
+  "homepage": "http://edwardsharp.github.io/demo-gfx",
   "dependencies": {
     "@types/pouchdb": "^6.3.2",
     "fabric": "^2.3.3",
@@ -21,6 +27,7 @@
     "@types/node": "^10.5.2",
     "@types/react": "^16.4.6",
     "@types/react-dom": "^16.0.6",
+    "gh-pages": "^1.2.0",
     "typescript": "^2.9.2"
   }
 }
