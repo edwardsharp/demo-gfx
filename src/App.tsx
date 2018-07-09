@@ -3,7 +3,7 @@ import 'fabric';
 declare let fabric: any; // @types/fabric is only fabric 1.5 right now, so this :/
 import PouchDB from 'pouchdb';
 
-import { Color, COLORS } from './color';
+// import { Color, COLORS } from './color';
 import { Gfx } from './gfx';
 
 import './App.css';
@@ -31,7 +31,7 @@ class App extends React.Component<{}, IAppState> {
   protected canvasWidth: number;
   protected panning: boolean = false;
   protected selecting: boolean = false;
-  protected colors: Color[] = COLORS;
+  // protected colors: Color[] = COLORS;
   protected selectedLayer: string | undefined;
   protected name: string = "New Plate";
   protected plateGroups = [
@@ -91,12 +91,17 @@ class App extends React.Component<{}, IAppState> {
     this.hideLayerPanel = this.hideLayerPanel.bind(this);
     this.addLayerToCanvasOnClick = this.addLayerToCanvasOnClick.bind(this);
     this.removeLayerOnClick = this.removeLayerOnClick.bind(this);
+    this.deleteAttachment = this.deleteAttachment.bind(this);
+    this.sendObjectOnClick = this.sendObjectOnClick.bind(this);
+    this.centerObjectOnClick = this.centerObjectOnClick.bind(this);
+    this.rotateObjectOnClick = this.rotateObjectOnClick.bind(this);
     this.state = {
       zoomVal: 0.5,
       plate: this.defaultPlate,
       uploading: false,
       showLayerPanel: false
     };
+    window.addEventListener('resize', () => this.resizeCanvas('') );
   }
 
   public render(){
@@ -104,11 +109,7 @@ class App extends React.Component<{}, IAppState> {
       <div className="App">
         <nav id="gfx">
           <div className="inline-flex space-between">
-
-            <button onClick={this.saveGfx}>
-              Save
-            </button>
-            
+            <button className="saveBtn" onClick={this.saveGfx}>Save</button>
           </div>
           <div className="flex">
             <button 
@@ -132,33 +133,64 @@ class App extends React.Component<{}, IAppState> {
             disabled={this.state.uploading}
             onChange={this.gfxFileChanged} ref={this.fileInput} />
 
-          
-
           {!this.state.showLayerPanel &&
             this.attachmentItemsForGfx().map((item:any) => {
               return (
-                <div onClick={this.showLayerPanelOnClick} key={item}>
+                <div className="flex" onClick={this.showLayerPanelOnClick} key={item}>
                   <img className="attachment-img" alt={item} src={this.attachmentSrcFor(this.gfx, item)} />
-                  <span title={item}>{item}</span>
-                  <p>
+                  <div>
+                    <span title={item}>{item}</span>
                     <span> {this.gfx.attachmentDimensions[item]} </span>
-                  </p>
+                  </div>
                 </div>
               );
             })
           }
 
           {this.state.showLayerPanel &&
-            <button onClick={this.hideLayerPanel}>All Layers</button>
+            <div className="layerPanel">
+              <button onClick={this.hideLayerPanel}>All Layers</button>
+              <div>{this.selectedLayer}</div>
+              {!this.isCanvasLayer(this.selectedLayer) && 
+                <button onClick={this.addLayerToCanvasOnClick}>Show</button>
+              }
+              {this.isCanvasLayer(this.selectedLayer) && 
+                <button onClick={this.removeLayerOnClick}>Hide</button>
+              }
+              <button onClick={this.deleteAttachment}>Delete</button>
+              <div>
+                <div>Center:</div>
+                <button onClick={this.centerObjectOnClick} value="frontTop">
+                  Front Top
+                </button>
+                <button onClick={this.centerObjectOnClick} value="frontCenter">
+                  Front Center
+                </button>
+                <button onClick={this.centerObjectOnClick} value="backTop">
+                  Back Top
+                </button>
+                <button onClick={this.centerObjectOnClick} value="backCenter">
+                  Back Center
+                </button>
+              </div>
+              <div>
+                <div>Position</div>
+                <button onClick={this.sendObjectOnClick} value="front">
+                  Bring to Top
+                </button>
+                <button onClick={this.sendObjectOnClick} value="forward">
+                  Bring Forward
+                </button>
+                <button onClick={this.sendObjectOnClick} value="backwards">
+                  Send Backward
+                </button>
+                <button onClick={this.sendObjectOnClick} value="back">
+                  Send to Bottom
+                </button>
+              </div>
+              <button onClick={this.rotateObjectOnClick}>Rotate</button>
+            </div>
           }
-
-          {this.state.showLayerPanel && !this.isCanvasLayer(this.selectedLayer) && 
-            <button onClick={this.addLayerToCanvasOnClick}>Show</button>
-          }
-          {this.state.showLayerPanel && this.isCanvasLayer(this.selectedLayer) && 
-            <button onClick={this.removeLayerOnClick}>Hide</button>
-          }
-          
 
         </nav>
         <canvas id="c">&nbsp;</canvas>
@@ -242,7 +274,7 @@ class App extends React.Component<{}, IAppState> {
       this.canvasWidth = document.documentElement.clientWidth;
       this.canvas.setWidth(this.canvasWidth);
       this.canvas.setHeight(this.canvasHeight);
-    }catch(e){ /* console.warn('o noz! caught e in resizeCanvas e:',e); */ }
+    }catch(e){  console.warn('o noz! caught e in resizeCanvas e:',e);  }
   }
 
   protected plateChange(e:any): void{
@@ -528,23 +560,23 @@ class App extends React.Component<{}, IAppState> {
     }catch(err){  console.warn('dimensionsFor err:',err);  } 
   }
 
-  protected deleteAttachmentFor(itemKey:string){
+  protected deleteAttachment(e:any){
+    this.deleteAttachmentFor(this.selectedLayer);
+  }
 
-    // this.gfxService.removeAttachment(this.gfx._id, itemKey, this.gfx._rev).then(result => {
-    //   // handle result
-    //   this.snackBar.open('Attachment removed', '', {
-    //     duration: 2000,
-    //   });
-    //   if(result["rev"]){
-    //     this.gfx._rev = result["rev"];
-    //   }
-    //   try{
-    //     delete this.gfx._attachments[itemKey];
-    //     this.removeLayer(itemKey);
-    //   }catch(err){ console.log('o noz! delete _attachments err:',err); }
-    // }).catch(function (err) {
-    //   console.log('o noz! removeAttachment err:',err);
-    // });
+  protected deleteAttachmentFor(itemKey:any){
+    this.db.removeAttachment(this.gfx._id, itemKey, this.gfx._rev).then((result:any) => {
+      // handle result
+      if(result.rev){
+        this.gfx._rev = result.rev;
+      }
+      try{
+        delete this.gfx._attachments[itemKey];
+        this.removeLayer(itemKey);
+      }catch(err){ console.log('o noz! delete _attachments err:',err); }
+    }).catch((err:any) => {
+      console.warn('o noz! removeAttachment err:',err);
+    });
   }
 
   protected showLayerPanelOnClick(e:any){
@@ -639,6 +671,10 @@ class App extends React.Component<{}, IAppState> {
     return this.gfx.canvasLayers.indexOf(itemKey) > -1;
   }
 
+  protected sendObjectOnClick(e:any){
+    this.sendObject(e.target.value);
+  }
+
   protected sendObject(dir:string): void{
     if(dir === 'backwards'){
       this.canvas.getActiveObject().sendBackwards();
@@ -652,6 +688,10 @@ class App extends React.Component<{}, IAppState> {
     this.canvas.renderAll();
   }
 
+  protected rotateObjectOnClick(e:any){
+    this.rotateObject();
+  }
+
   protected rotateObject(): void{
     let currentAngle = this.canvas.getActiveObject().get('angle');
     if(currentAngle % 90 !== 0){
@@ -659,6 +699,10 @@ class App extends React.Component<{}, IAppState> {
     }
     this.canvas.getActiveObject().rotate(currentAngle + 90);
     this.canvas.renderAll();
+  }
+
+  protected centerObjectOnClick(e:any){
+    this.centerObject(e.target.value);
   }
 
   protected centerObject(on:string): void{
@@ -671,41 +715,6 @@ class App extends React.Component<{}, IAppState> {
     }
   }
 
-  protected openNotesDialog(): void {
-    // let dialogRef = this.dialog.open(NotesDialog, {
-    //   data: { notes: this.gfx.notes }
-    // });
-    // dialogRef.afterClosed().subscribe(result => {
-    //   this.gfx.notes = result;
-    // });
-  }
-
-  protected initCanvasLayerColors(selectedLayer: string): boolean{
-    if(this.gfx.canvasLayerColors[selectedLayer] === undefined){
-      this.gfx.canvasLayerColors[selectedLayer] = [];
-    }
-    return this.gfx.canvasLayerColors[selectedLayer].length > -1;
-  }
-
-  protected addColorFor(selectedLayer:string, color:string): void{
-    if(this.gfx.canvasLayerColors[selectedLayer].indexOf(color) === -1){
-      this.gfx.canvasLayerColors[selectedLayer].push(color);
-    }
-  }
-
-  protected deleteColorFor(selectedLayer:string, color:string): void {
-    this.gfx.canvasLayerColors[selectedLayer].splice(this.gfx.canvasLayerColors[selectedLayer].indexOf(color), 1);
-  }
-
-  // protected filterColors(name: string) {
-  //   return this.colors.filter(color => {
-  //     color.name.toLowerCase().indexOf(name.toLowerCase()) === 0;
-  //   });
-  // }
-
-  // selectedColor(event: MatAutocompleteSelectedEvent) {
-  //   this.addColorFor(this.selectedLayer, event.option.value);
-  // }
 }
 
 export default App;

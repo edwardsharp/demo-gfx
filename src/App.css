@@ -112,6 +112,15 @@ nav button, nav input, nav select{
   width: 50px;
 }
 
+.layerPanel{
+  border-top: thin solid #666;
+  padding-top: 7px;
+}
+
+.saveBtn{
+  display: none;
+}
+
 @media (max-width: 767px) {
 
 
