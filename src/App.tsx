@@ -91,7 +91,7 @@ class App extends React.Component<{}, IAppState> {
     this.hideLayerPanel = this.hideLayerPanel.bind(this);
     this.addLayerToCanvasOnClick = this.addLayerToCanvasOnClick.bind(this);
     this.removeLayerOnClick = this.removeLayerOnClick.bind(this);
-    this.deleteAttachment = this.deleteAttachment.bind(this);
+    this.deleteAttachmentOnClick = this.deleteAttachmentOnClick.bind(this);
     this.sendObjectOnClick = this.sendObjectOnClick.bind(this);
     this.centerObjectOnClick = this.centerObjectOnClick.bind(this);
     this.rotateObjectOnClick = this.rotateObjectOnClick.bind(this);
@@ -157,7 +157,7 @@ class App extends React.Component<{}, IAppState> {
               {this.isCanvasLayer(this.selectedLayer) && 
                 <button onClick={this.removeLayerOnClick}>Hide</button>
               }
-              <button onClick={this.deleteAttachment}>Delete</button>
+              <button onClick={this.deleteAttachmentOnClick}>Delete</button>
               <div>
                 <div>Center:</div>
                 <button onClick={this.centerObjectOnClick} value="frontTop">
@@ -560,7 +560,7 @@ class App extends React.Component<{}, IAppState> {
     }catch(err){  console.warn('dimensionsFor err:',err);  } 
   }
 
-  protected deleteAttachment(e:any){
+  protected deleteAttachmentOnClick(e:any){
     this.deleteAttachmentFor(this.selectedLayer);
   }
 
