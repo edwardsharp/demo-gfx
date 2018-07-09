@@ -157,7 +157,7 @@ class App extends React.Component<{}, IAppState> {
               {this.isCanvasLayer(this.selectedLayer) && 
                 <button onClick={this.removeLayerOnClick}>Hide</button>
               }
-              <button onClick={this.deleteAttachmentOnClick}>Delete</button>
+              <button onClick={this.deleteAttachmentOnClick} value={this.selectedLayer}>Delete</button>
               <div>
                 <div>Center:</div>
                 <button onClick={this.centerObjectOnClick} value="frontTop">
@@ -561,10 +561,11 @@ class App extends React.Component<{}, IAppState> {
   }
 
   protected deleteAttachmentOnClick(e:any){
-    this.deleteAttachmentFor(this.selectedLayer);
+    this.deleteAttachmentFor(e.target.value);
   }
 
   protected deleteAttachmentFor(itemKey:any){
+    console.log('deleteAttachmentFor itemKey',itemKey);
     this.db.removeAttachment(this.gfx._id, itemKey, this.gfx._rev).then((result:any) => {
       // handle result
       if(result.rev){
@@ -572,6 +573,7 @@ class App extends React.Component<{}, IAppState> {
       }
       try{
         delete this.gfx._attachments[itemKey];
+        console.log('deleteAttachmentFor gonna removeLayer itemKey',itemKey);
         this.removeLayer(itemKey);
       }catch(err){ console.log('o noz! delete _attachments err:',err); }
     }).catch((err:any) => {
@@ -664,6 +666,7 @@ class App extends React.Component<{}, IAppState> {
       this.hideLayerPanel();
       delete this.gfx.canvasLayerColors[itemKey];
       this.gfx.canvasLayers.splice(this.gfx.canvasLayers.indexOf(itemKey), 1);
+      console.log('removeLayer itemKey',itemKey,' gfx:',this.gfx);
     }catch(e){  console.warn('could not remove layer:',itemKey,' e:',e);  }
   }
 
