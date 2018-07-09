@@ -13,7 +13,6 @@
 }
 
 nav {
-  padding: 6px;
   position: absolute;
   z-index: 3;
   right: 20px;
@@ -100,7 +99,7 @@ mat-expansion-panel{
 }*/
 
 nav button, nav input, nav select{
-  margin-bottom: 7px;
+  margin: 7px;
 }
 
 .mat-list-item-content span{

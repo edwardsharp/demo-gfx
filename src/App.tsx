@@ -136,7 +136,7 @@ class App extends React.Component<{}, IAppState> {
           {!this.state.showLayerPanel &&
             this.attachmentItemsForGfx().map((item:any) => {
               return (
-                <div className="flex" onClick={this.showLayerPanelOnClick} key={item}>
+                <div className="flex" onClick={this.showLayerPanelOnClick(item)} key={item}>
                   <img className="attachment-img" alt={item} src={this.attachmentSrcFor(this.gfx, item)} />
                   <div>
                     <span title={item}>{item}</span>
@@ -159,7 +159,7 @@ class App extends React.Component<{}, IAppState> {
               }
               <button onClick={this.deleteAttachmentOnClick} value={this.selectedLayer}>Delete</button>
               <div>
-                <div>Center:</div>
+                <div>Center</div>
                 <button onClick={this.centerObjectOnClick} value="frontTop">
                   Front Top
                 </button>
@@ -337,6 +337,7 @@ class App extends React.Component<{}, IAppState> {
       top: 0,
       fill: '#DDD',
       selectable: false,
+      evented: false,
       width: measurementThickness,
       height: 2660,
       excludeFromExport: true
@@ -348,6 +349,7 @@ class App extends React.Component<{}, IAppState> {
       fill: '#DDD',
       width: 2660,
       selectable: false,
+      evented: false,
       height: measurementThickness,
       excludeFromExport: true
     }));
@@ -366,6 +368,7 @@ class App extends React.Component<{}, IAppState> {
       rulerItems.push(new fabric.Line([location1, measurementThickness, location1, width], {
         stroke: isFoot ? '#888' : '#ccc',
         selectable: false,
+        evented: false,
         excludeFromExport: true
       }));
 
@@ -373,6 +376,7 @@ class App extends React.Component<{}, IAppState> {
       rulerItems.push(new fabric.Line([measurementThickness, location1, width, location1], {
         stroke: isFoot ? '#888' : '#ccc',
         selectable: false,
+        evented: false,
         excludeFromExport: true
       }));
 
@@ -380,12 +384,14 @@ class App extends React.Component<{}, IAppState> {
       rulerItems.push(new fabric.Line([measurementThickness - tickSize, location1, measurementThickness, location1], {
         stroke: '#888',
         selectable: false,
+        evented: false,
         excludeFromExport: true
       }));
       rulerItems.push(new fabric.Text(count.toString(), {
         left: measurementThickness - (tickSize * 2 + 10),
         top: location1,
         selectable: false,
+        evented: false,
         fontSize: minorFontSize,
         fontFamily: 'san-serif',
         excludeFromExport: true
@@ -396,12 +402,14 @@ class App extends React.Component<{}, IAppState> {
         rulerItems.push(new fabric.Line([measurementThickness - tickSizeFoot, location1, measurementThickness, location1], {
           stroke: '#222',
           selectable: false,
-        excludeFromExport: true
+          evented: false,
+          excludeFromExport: true
         }));
         rulerItems.push(new fabric.Text(footCount + "\'", {
           left: measurementThickness - (tickSizeFoot + 10),
           top: location1 + 4,
           selectable: false,
+          evented: false,
           fontSize: majorFontSize,
           fontFamily: 'san-serif',
           excludeFromExport: true
@@ -412,12 +420,14 @@ class App extends React.Component<{}, IAppState> {
       rulerItems.push(new fabric.Line([location1, measurementThickness - tickSize, location1, measurementThickness], {
         stroke: '#888',
         selectable: false,
+        evented: false,
         excludeFromExport: true
       }));
       rulerItems.push(new fabric.Text(count.toString(), {
         left: location1 + 3,
         top: measurementThickness - (tickSize * 2) - 4,
         selectable: false,
+        evented: false,
         fontSize: minorFontSize,
         fontFamily: 'san-serif',
         excludeFromExport: true
@@ -427,12 +437,14 @@ class App extends React.Component<{}, IAppState> {
         rulerItems.push(new fabric.Line([location1, measurementThickness - tickSizeFoot, location1, measurementThickness], {
           stroke: '#222',
           selectable: false,
+          evented: false,
           excludeFromExport: true
         }));
         rulerItems.push(new fabric.Text(footCount + "\'", {
           left: location1 + 10,
           top: measurementThickness - (tickSizeFoot) - 7,
           selectable: false,
+          evented: false,
           fontSize: majorFontSize,
           fontFamily: 'san-serif',
           excludeFromExport: true
@@ -443,6 +455,8 @@ class App extends React.Component<{}, IAppState> {
     } // for()
 
     const rulerGroup = new fabric.Group(rulerItems);
+    rulerGroup.selectable = false;
+    rulerGroup.evented = false;
     rulerGroup.excludeFromExport = true;
     this.canvas.add(rulerGroup);
     this.canvas.sendToBack(rulerGroup);
@@ -451,7 +465,7 @@ class App extends React.Component<{}, IAppState> {
 
   protected saveGfx(){
 
-    this.gfx.canvasData = this.canvas.toDatalessJSON(['id','selectable','lockScalingX', 'lockScalingY', 'hasControls', 'hasBorders', 'lockMovementX', 'lockMovementY']);    
+    this.gfx.canvasData = this.canvas.toDatalessJSON(['id','evented','selectable','lockScalingX', 'lockScalingY', 'hasControls', 'hasBorders', 'lockMovementX', 'lockMovementY']);    
     
     this.canvas.getObjects().forEach((o:any) => {
       if(o.excludeFromExport) {
@@ -477,7 +491,7 @@ class App extends React.Component<{}, IAppState> {
       }, (err:any) => console.warn('o noz, getGfx err:',err));
 
     }, (err:any) =>{
-      console.log('o noz! saveGfx err:',err);
+      console.warn('o noz! saveGfx err:',err);
     });
   }
 
@@ -502,7 +516,7 @@ class App extends React.Component<{}, IAppState> {
         this.gfx._rev = resp.rev;
       }
 
-      this.db.get(this.gfx._id, {attachments: true}).then( (gfx:Gfx) => this.gfx = gfx, (err:any) => console.log('o noz, getGfx err:',err));
+      this.db.get(this.gfx._id, {attachments: true}).then( (gfx:Gfx) => this.gfx = gfx, (err:any) => console.warn('o noz, getGfx err:',err));
 
       setTimeout( () => {
         for(const item of files){
@@ -560,7 +574,6 @@ class App extends React.Component<{}, IAppState> {
   }
 
   protected deleteAttachmentFor(itemKey:any){
-    console.log('deleteAttachmentFor itemKey',itemKey);
     this.db.removeAttachment(this.gfx._id, itemKey, this.gfx._rev).then((result:any) => {
       // handle result
       if(result.rev){
@@ -568,18 +581,16 @@ class App extends React.Component<{}, IAppState> {
       }
       try{
         delete this.gfx._attachments[itemKey];
-        console.log('deleteAttachmentFor gonna removeLayer itemKey',itemKey);
         this.removeLayer(itemKey);
-      }catch(err){ console.log('o noz! delete _attachments err:',err); }
+      }catch(err){ console.warn('o noz! delete _attachments err:',err); }
     }).catch((err:any) => {
       console.warn('o noz! removeAttachment err:',err);
     });
   }
 
-  protected showLayerPanelOnClick(e:any){
-    console.log('showLayerPanelOnClick e:',e.target.title);
-    this.showLayerPanelFor(e.target.title);
-  }
+  protected showLayerPanelOnClick = (item:any) => (e:any) => {
+    this.showLayerPanelFor(item);
+  };
 
   protected showLayerPanelFor(itemKey:string){
     this.selectedLayer = itemKey;
@@ -595,6 +606,7 @@ class App extends React.Component<{}, IAppState> {
   }
   protected hideLayerPanel(){
     this.selectedLayer = undefined;
+    this.canvas.discardActiveObject().renderAll();
     this.setState({showLayerPanel: false});
   }
 
@@ -661,7 +673,6 @@ class App extends React.Component<{}, IAppState> {
       this.hideLayerPanel();
       delete this.gfx.canvasLayerColors[itemKey];
       this.gfx.canvasLayers.splice(this.gfx.canvasLayers.indexOf(itemKey), 1);
-      console.log('removeLayer itemKey',itemKey,' gfx:',this.gfx);
     }catch(e){  console.warn('could not remove layer:',itemKey,' e:',e);  }
   }
 
