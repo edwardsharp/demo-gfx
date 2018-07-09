@@ -129,7 +129,7 @@ class App extends React.Component<{}, IAppState> {
           <this.PlateSelect plateGroups={this.plateGroups} plate={this.state.plate} />
 
           <input id="designFile" type="file" multiple={true}  
-            accept="image/x-png,image/gif,image/jpeg,image/svg+xml"
+            accept="image/x-png,image/png,image/gif,image/jpeg,image/svg+xml"
             disabled={this.state.uploading}
             onChange={this.gfxFileChanged} ref={this.fileInput} />
 
@@ -220,13 +220,8 @@ class App extends React.Component<{}, IAppState> {
 
   public componentDidMount(){
 
+    this.db = new PouchDB('gfx');
     this.gfx = new Gfx();
-    if(navigator.vendor && navigator.vendor.indexOf('Apple') > -1){
-      console.log("LOADING FRUITDONW DB!");
-      this.db = new PouchDB('gfx', {adapter: 'fruitdown'});
-    }else{
-      this.db = new PouchDB('gfx');
-    }
 
     this.canvas = new fabric.Canvas('c', {
       selection: false,
