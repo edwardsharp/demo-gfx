@@ -13,6 +13,7 @@
   "author": "edwardsharp",
   "description": "react component for adding gfx to an apparel template",
   "license": "GPL-3.0",
+  "repository": "github:edwardsharp/demo-gfx",
   "homepage": "http://edwardsharp.github.io/demo-gfx",
   "dependencies": {
     "@types/pouchdb": "^6.3.2",
