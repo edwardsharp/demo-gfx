@@ -2,11 +2,21 @@
   
 }
 
-/*@keyframes App-logo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+#madewithlove {
+  position: absolute;
+  bottom: 0;
+  right: 50px;
+  z-index: 666;
+  font-size: 0.7em;
 }
-*/
+
+#madewithlove a, #madewithlove a:visited {
+  color: black;
+}
+#madewithlove a:hover {
+  color: #eeddee;
+  background-color: black;
+}
 
 .svg {
   display: none;
