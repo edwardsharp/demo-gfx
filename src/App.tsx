@@ -241,7 +241,7 @@ class App extends React.Component<{}, IAppState> {
       }
     });
     window.addEventListener('keyup', (e) => {
-      if(this.canvas.getActiveObject() === null && (e.ctrlKey || e.metaKey || e.key === 'Meta' || e.key === 'Control')){
+      if(e.ctrlKey || e.metaKey || e.key === 'Meta' || e.key === 'Control'){
         this.selecting = false;
         this.canvas.selection = false;
         this.canvas.defaultCursor = 'move';
