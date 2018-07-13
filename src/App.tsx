@@ -118,6 +118,7 @@ class App extends React.Component<{}, IAppState> {
               reset zoom
             </button>
             <input type="range"
+              className="zoom"
               onChange={this.zoom}
               min="0.1" 
               max="3" 
@@ -226,9 +227,26 @@ class App extends React.Component<{}, IAppState> {
     this.canvas = new fabric.Canvas('c', {
       selection: false,
       renderOnAddRemove: false,
-      stateful: false
+      stateful: false,
+      defaultCursor: 'move',
+      hoverCursor: 'grab'
     });
     this.drawRulers();
+
+    window.addEventListener('keydown', (e) => {
+      if(e.ctrlKey || e.metaKey){
+        this.selecting = true;
+        this.canvas.selection = true;
+        this.canvas.defaultCursor = 'default';
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      if(this.canvas.getActiveObject() === null && (e.ctrlKey || e.metaKey || e.key === 'Meta' || e.key === 'Control')){
+        this.selecting = false;
+        this.canvas.selection = false;
+        this.canvas.defaultCursor = 'move';
+      }
+    });
 
     this.canvas.on('mouse:up', (e:any) => {
       this.panning = false;
@@ -241,6 +259,7 @@ class App extends React.Component<{}, IAppState> {
       if (!this.selecting && this.panning && e && e.e) {
         const delta = new fabric.Point(e.e.movementX, e.e.movementY);
         this.canvas.relativePan(delta);
+        this.canvas.renderAll();
       }
     });
     // mouse:wheel ?

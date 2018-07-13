@@ -1,7 +1,6 @@
-.App {
-  
+html {
+  overflow: hidden;
 }
-
 #madewithlove {
   position: absolute;
   bottom: 0;
@@ -36,6 +35,7 @@ nav {
 }
 
 canvas {
+
 }
 
 small {
@@ -128,6 +128,10 @@ nav button, nav input, nav select{
 
 .saveBtn{
   display: none;
+}
+
+.zoom{
+  cursor: zoom-in;
 }
 
 @media (max-width: 767px) {
