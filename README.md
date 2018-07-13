@@ -2,7 +2,9 @@
 
 react component for adding gfx to an apparel template. cuz like, everybody be jumpin' off that react bridge; so here i go. 🌉🤓
 
-this was built with [Create React App](https://github.com/facebookincubator/create-react-app) see: [REACT-README.md](REACT-README.md)
+🗣 this was built with [Create React App](https://github.com/facebookincubator/create-react-app) see: [REACT-README.md](REACT-README.md)
+
+🗣 this project relies heavily on [fabric.js](http://fabricjs.com/); a swanky JS canvas library.
 
 ## mostly:
 
